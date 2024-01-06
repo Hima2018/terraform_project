@@ -1,0 +1,78 @@
+# Instance volumes
+resource "aws_ebs_volume" "primary_volume" {
+  count             = 2
+  availability_zone = var.az_names[count.index]
+  size              = 8
+  type              = "gp2"
+tags = {
+    Name = "Primary Volume"
+  }
+}
+
+resource "aws_volume_attachment" "primary_volume_attachment" {
+  device_name = "/dev/sda1"
+  volume_id   =  aws_ebs_volume.primary_volume.*.id[count.index]
+  instance_id = aws_autoscaling_group.auto_scaling_group.id
+}
+
+resource "aws_ebs_volume" "secondary_volume" {
+  count             = 2
+  availability_zone = var.az_names[count.index]
+  size              = 8
+  type              = "gp2"
+
+  tags = {
+    Name = "Secondary EBS Volume for Logs"
+  }
+}
+
+resource "aws_volume_attachment" "secondary_volume_attachment" {
+  device_name = "/dev/sdb"
+  volume_id   = aws_ebs_volume.secondary_volume.*.id[count.index]
+  instance_id = aws_autoscaling_group.auto_scaling_group.id
+}
+
+resource "aws_autoscaling_policy" "web_policy_up" {
+  name = "web_policy_up"
+  scaling_adjustment = 1
+  adjustment_type = "ChangeInCapacity"
+  cooldown = 300
+  autoscaling_group_name = aws_autoscaling_group.web.name
+}
+resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_up" {
+  alarm_name = "web_cpu_alarm_up"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods = "2"
+  metric_name = "CPUUtilization"
+  namespace = "AWS/EC2"
+  period = "120"
+  statistic = "Average"
+  threshold = "60"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web.name
+  }
+  alarm_description = "This metric monitor EC2 instance CPU utilization"
+  alarm_actions = [ aws_autoscaling_policy.web_policy_up.arn ]
+}
+resource "aws_autoscaling_policy" "web_policy_down" {
+  name = "web_policy_down"
+  scaling_adjustment = -1
+  adjustment_type = "ChangeInCapacity"
+  cooldown = 300
+  autoscaling_group_name = aws_autoscaling_group.web.name
+}
+resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_down" {
+  alarm_name = "web_cpu_alarm_down"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods = "2"
+  metric_name = "CPUUtilization"
+  namespace = "AWS/EC2"
+  period = "120"
+  statistic = "Average"
+  threshold = "10"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web.name
+  }
+  alarm_description = "This metric monitor EC2 instance CPU utilization"
+  alarm_actions = [ aws_autoscaling_policy.web_policy_down.arn ]
+}

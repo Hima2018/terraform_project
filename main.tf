@@ -1,7 +1,7 @@
 
 provider "aws" {
-  access_key = "AKIAQ6WUJP42XBSYX3FK"
-  secret_key = "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"
+  access_key = "<key>
+  secret_key = "<key>"
 }
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr

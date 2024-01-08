@@ -1,7 +1,8 @@
-In this article, we will
-Create a VPC, Subnets, and Configure network requirements.
-Create EC2 instances with Auto scaling group and Launch template.
-Create a Load balancer with a target group to the Auto Scaling group.
+In this, I have
+Created VPC, Subnets, and Configure network requirements.
+Created EC2 instances with Auto scaling group and Launch template.
+Created Load balancer with a target group to the Auto Scaling group.
+
 Setting up the Environment
 1. Install AWS CLI and configure
 If you don’t have AWS CLI already, install AWS CLI to your system based on your OS by following the instructions here.
